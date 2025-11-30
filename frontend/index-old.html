@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Document Authoring Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-gradient-to-br from-slate-50 to-slate-100 text-slate-900 min-h-screen">
+    <header class="shadow bg-white">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-slate-500">Prototype</p>
+          <h1 class="text-2xl font-semibold">AI Document Authoring Platform</h1>
+        </div>
+        <button id="refresh-btn" class="btn-primary">Refresh Data</button>
+      </div>
+    </header>
+
+    <main class="mx-auto grid max-w-6xl gap-6 px-6 py-8 md:grid-cols-[280px_1fr_1fr]">
+      <section class="panel" id="auth-panel">
+        <h2 class="panel-title">Team & Sessions</h2>
+        <form id="user-form" class="stack">
+          <input type="email" name="email" placeholder="email@example.com" required />
+          <input type="text" name="display_name" placeholder="Display name" required />
+          <select name="role">
+            <option value="author">Author</option>
+            <option value="reviewer">Reviewer</option>
+          </select>
+          <button class="btn-primary" type="submit">Create User</button>
+        </form>
+
+        <form id="session-form" class="stack">
+          <input type="text" name="user_id" placeholder="User ID" required />
+          <input type="number" name="ttl_minutes" placeholder="TTL minutes (60)" />
+          <button class="btn-secondary" type="submit">Create Session</button>
+        </form>
+
+        <div>
+          <h3 class="panel-subtitle">Users</h3>
+          <ul id="user-list" class="list"></ul>
+        </div>
+        <div>
+          <h3 class="panel-subtitle">Sessions</h3>
+          <ul id="session-list" class="list"></ul>
+        </div>
+      </section>
+
+      <section class="panel" id="documents-panel">
+        <h2 class="panel-title">Documents</h2>
+        <form id="document-form" class="stack">
+          <input type="text" name="owner_id" placeholder="Owner ID" required />
+          <input type="text" name="title" placeholder="Document title" required />
+          <select name="doc_type">
+            <option value="docx">DOCX</option>
+            <option value="pptx">PPTX</option>
+          </select>
+          <button class="btn-primary" type="submit">Create Document</button>
+        </form>
+
+        <div>
+          <h3 class="panel-subtitle">Documents</h3>
+          <ul id="document-list" class="list"></ul>
+        </div>
+      </section>
+
+      <section class="panel" id="llm-panel">
+        <h2 class="panel-title">Gemini Requests</h2>
+        <form id="generation-form" class="stack">
+          <input type="text" name="document_id" placeholder="Document ID" required />
+          <input type="text" name="user_id" placeholder="User ID" required />
+          <textarea name="prompt" rows="4" placeholder="Prompt for Gemini" required></textarea>
+          <input type="text" name="tone" placeholder="Tone (optional)" />
+          <button class="btn-primary" type="submit">Queue Request</button>
+        </form>
+
+        <div>
+          <h3 class="panel-subtitle">Queued Requests</h3>
+          <ul id="request-list" class="list"></ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="mx-auto max-w-6xl px-6 pb-8 text-xs text-slate-500">
+      Mock data persists only in memory until Firestore integration lands.
+    </footer>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>
+

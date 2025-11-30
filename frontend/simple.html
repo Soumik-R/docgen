@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Document Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .toast.hidden {
+            opacity: 0;
+            transform: translateY(-20px);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success {
+            background: #10b981;
+            color: white;
+        }
+
+        .toast.error {
+            background: #ef4444;
+            color: white;
+        }
+
+        header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .header-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo svg {
+            width: 28px;
+            height: 28px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #475569;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #eef2ff 0%, #f3e8ff 100%);
+            padding: 24px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .card-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .card-header p {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .documents-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .doc-count {
+            padding: 6px 12px;
+            background: #d1fae5;
+            color: #065f46;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 20px;
+        }
+
+        .documents-list {
+            padding: 24px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #94a3b8;
+            padding: 48px 24px;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            color: #cbd5e1;
+            margin: 0 auto 12px;
+        }
+
+        .doc-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .doc-item:hover {
+            border-color: #a5b4fc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .doc-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .doc-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .doc-icon {
+            font-size: 24px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            font-size: 12px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .doc-prompt {
+            font-size: 14px;
+            color: #64748b;
+            margin: 8px 0;
+        }
+
+        .doc-meta {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        .copy-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #6366f1;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <h1>AI Document Generator</h1>
+                    <p class="subtitle">Powered by Google Gemini</p>
+                </div>
+            </div>
+            <button id="logout-btn" class="logout-btn">
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Main Generation Form -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Create AI-Generated Document</h2>
+                <p>Fill in the details below to generate your document</p>
+            </div>
+
+            <div class="card-body">
+                <form id="generate-form">
+                    <!-- Document Title -->
+                    <div class="form-group">
+                        <label>
+                            Document Title <span class="required">*</span>
+                        </label>
+                        <input type="text" id="doc-title" name="title"
+                            placeholder="e.g., Q4 Business Report, Marketing Strategy 2024" required />
+                    </div>
+
+                    <!-- Document Type -->
+                    <div class="form-group">
+                        <label>
+                            Document Type <span class="required">*</span>
+                        </label>
+                        <select id="doc-type" name="doc_type">
+                            <option value="docx">📝 Word Document (.docx)</option>
+                            <option value="pptx">📊 PowerPoint Presentation (.pptx)</option>
+                        </select>
+                    </div>
+
+                    <!-- Content Prompt -->
+                    <div class="form-group">
+                        <label>
+                            What would you like to generate? <span class="required">*</span>
+                        </label>
+                        <textarea id="prompt" name="prompt"
+                            placeholder="Example: Write an executive summary about our company's Q4 performance, highlighting revenue growth of 25%, key product launches, and market expansion into Southeast Asia. Include sections on achievements, challenges, and outlook for next quarter."
+                            required></textarea>
+                        <p class="hint">💡 Be specific and detailed for better results</p>
+                    </div>
+
+                    <!-- Writing Tone -->
+                    <div class="form-group">
+                        <label>Writing Tone</label>
+                        <select id="tone" name="tone">
+                            <option value="">-- Select a tone (optional) --</option>
+                            <option value="professional">Professional</option>
+                            <option value="casual">Casual</option>
+                            <option value="formal">Formal</option>
+                            <option value="friendly">Friendly</option>
+                            <option value="technical">Technical</option>
+                        </select>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-primary">
+                        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        <span id="submit-text">Generate Document</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Generated Documents List -->
+        <div class="card">
+            <div class="card-header">
+                <div class="documents-header">
+                    <div>
+                        <h2>Your Documents</h2>
+                        <p>Recently generated documents</p>
+                    </div>
+                    <span id="doc-count" class="doc-count">0</span>
+                </div>
+            </div>
+            <div id="documents-list" class="documents-list">
+                <div class="empty-state">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    <p>No documents yet. Create your first one above!</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="./simple-app.js" type="module"></script>
+</body>
+
+</html>
