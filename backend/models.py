@@ -1,8 +1,28 @@
-"""Domain models for the AI Document Authoring Platform.
+"""
+Domain models for the AI Document Authoring Platform.
 
-These dataclasses keep the backend logic decoupled from the eventual
-Firestore integration. Serialization helpers allow seamless swapping between
-in-memory mocks and future persistence layers.
+This module defines the core data structures (entities) used throughout the application.
+These dataclasses represent our domain model and keep the backend logic decoupled from 
+the eventual Firestore integration.
+
+Design Principles:
+    - Immutability where possible (using slots=True for memory efficiency)
+    - Type safety with Python type hints
+    - Serialization support for database persistence
+    - Business logic encapsulated in methods
+    - Future-proof for Firestore migration
+
+Models:
+    - User: Platform users (authors, reviewers)
+    - Document: Main document entities
+    - DocumentVersion: Immutable version snapshots
+    - Session: Authentication/authorization sessions
+    - GenerationRequest: AI content generation tracking
+    
+Serialization:
+    - to_dict(): Converts model to JSON-serializable dictionary
+    - from_dict(): Creates model instance from dictionary
+    - ISO format for datetime fields for consistent parsing
 """
 
 from __future__ import annotations
@@ -14,38 +34,123 @@ import uuid
 
 
 def _utcnow() -> datetime:
-    """Helper to create timezone-naive UTC stamps (replace with aware timestamps later)."""
+    """
+    Helper to create timezone-naive UTC timestamps.
+    
+    Returns current UTC time without timezone information.
+    
+    Note:
+        In production, consider using timezone-aware timestamps (datetime.now(timezone.utc))
+        for better handling of different timezones.
+        
+    Returns:
+        datetime: Current UTC timestamp (naive)
+    """
     return datetime.utcnow()
 
 
 @dataclass(slots=True)
 class User:
-    """Represents a platform user (human author or collaborator)."""
+    """
+    Represents a platform user (human author or collaborator).
+    
+    Users can have different roles that determine their permissions:
+        - author: Can create and edit documents
+        - reviewer: Can view and comment on documents
+        
+    Attributes:
+        id (str): Unique identifier (UUID hex)
+        email (str): User's email address (unique, used for login)
+        display_name (str): Human-readable name shown in UI
+        role (str): User role determining permissions ('author' or 'reviewer')
+        created_at (datetime): When the user account was created
+        updated_at (datetime): Last time user data was modified
+        
+    Example:
+        user = User(
+            id=uuid.uuid4().hex,
+            email="john@example.com",
+            display_name="John Doe",
+            role="author"
+        )
+    """
 
     id: str
     email: str
     display_name: str
-    role: str = "author"
+    role: str = "author"  # Default role is 'author'
     created_at: datetime = field(default_factory=_utcnow)
     updated_at: datetime = field(default_factory=_utcnow)
 
     def touch(self) -> None:
-        """Update the modification timestamp."""
+        """
+        Update the modification timestamp to current time.
+        
+        Call this method whenever user data is modified to track the last update time.
+        This is useful for audit trails and synchronization.
+        
+        Example:
+            user.display_name = "Jane Doe"
+            user.touch()  # Updates updated_at timestamp
+        """
         self.updated_at = _utcnow()
 
     def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert User instance to JSON-serializable dictionary.
+        
+        Converts datetime objects to ISO format strings for JSON compatibility.
+        Used when sending data to frontend or saving to database.
+        
+        Returns:
+            Dict[str, Any]: Dictionary representation with ISO timestamp strings
+            
+        Example Output:
+            {
+                "id": "abc123...",
+                "email": "john@example.com",
+                "display_name": "John Doe",
+                "role": "author",
+                "created_at": "2024-01-15T10:30:00",
+                "updated_at": "2024-01-15T10:30:00"
+            }
+        """
         data = asdict(self)
+        # Convert datetime objects to ISO format strings
         data["created_at"] = self.created_at.isoformat()
         data["updated_at"] = self.updated_at.isoformat()
         return data
 
     @classmethod
     def from_dict(cls, payload: Dict[str, Any]) -> "User":
+        """
+        Create User instance from dictionary data.
+        
+        Used when loading data from database or receiving from API.
+        Converts ISO timestamp strings back to datetime objects.
+        
+        Args:
+            payload: Dictionary containing user data
+            
+        Returns:
+            User: New User instance
+            
+        Example:
+            data = {
+                "id": "abc123",
+                "email": "john@example.com",
+                "display_name": "John Doe",
+                "role": "author",
+                "created_at": "2024-01-15T10:30:00",
+                "updated_at": "2024-01-15T10:30:00"
+            }
+            user = User.from_dict(data)
+        """
         return cls(
             id=payload["id"],
             email=payload["email"],
             display_name=payload["display_name"],
-            role=payload.get("role", "author"),
+            role=payload.get("role", "author"),  # Default to 'author' if not specified
             created_at=datetime.fromisoformat(payload["created_at"]),
             updated_at=datetime.fromisoformat(payload["updated_at"]),
         )

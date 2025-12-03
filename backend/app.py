@@ -1,4 +1,21 @@
-"""Flask application entrypoint for the AI Document Authoring Platform."""
+"""
+Flask application entrypoint for the AI Document Authoring Platform.
+
+This module serves as the main entry point for the backend API server.
+It follows the Application Factory pattern, creating and configuring the Flask app.
+
+Architecture:
+    - Uses Blueprint pattern for modular route organization
+    - Implements Dependency Injection for services and repositories
+    - Maintains separation of concerns (routes -> services -> repositories -> data)
+    - Configures CORS for frontend communication
+
+Key Components:
+    - Data Store: In-memory storage (temporary, will migrate to Firestore)
+    - Repositories: Data access layer with CRUD operations
+    - Services: Business logic layer orchestrating operations
+    - Routes: HTTP endpoint handlers
+"""
 
 from __future__ import annotations
 
@@ -18,40 +35,111 @@ from utils.llm_helper import safe_generate
 
 
 def create_app() -> Flask:
-    """Instantiate and configure the Flask application."""
+    """
+    Instantiate and configure the Flask application using the Factory Pattern.
+    
+    This function creates a new Flask application instance and configures all
+    necessary components including data store, repositories, services, and routes.
+    
+    Benefits of Factory Pattern:
+        - Enables multiple app instances (useful for testing)
+        - Centralizes configuration
+        - Makes dependency injection explicit
+        
+    Returns:
+        Flask: Configured Flask application instance
+    
+    Configuration Flow:
+        1. Load environment variables (.env file)
+        2. Create Flask app instance
+        3. Enable CORS for cross-origin requests
+        4. Initialize in-memory data store
+        5. Create repository instances (data access layer)
+        6. Create service instances (business logic layer)
+        7. Register route blueprints (HTTP handlers)
+        8. Add health check endpoint
+    """
+    # Load environment variables from .env file (contains API keys, config)
     load_dotenv()
+    
+    # Create Flask application instance
     app = Flask(__name__)
-    CORS(app)  # Enable CORS for all routes
+    
+    # Enable CORS (Cross-Origin Resource Sharing)
+    # This allows the frontend (different port/domain) to make requests to this API
+    CORS(app)
 
     # --- In-memory persistence layer ----------------------------------- #
+    # Create the data store - currently uses dictionaries for development
+    # Future: Replace with Firestore collections for production
     store = InMemoryDataStore()
+    
+    # Initialize repositories - each repository manages one entity type
+    # Repositories provide CRUD operations and abstract data access
+    # This pattern allows us to swap storage backends without changing business logic
     repositories = {
-        "users": UserRepository(store.users),
-        "documents": DocumentRepository(store.documents),
-        "versions": DocumentVersionRepository(store.versions),
-        "sessions": SessionRepository(store.sessions),
-        "generation": GenerationRequestRepository(store.generation_requests),
+        "users": UserRepository(store.users),              # User account management
+        "documents": DocumentRepository(store.documents),   # Document CRUD operations
+        "versions": DocumentVersionRepository(store.versions),  # Version history tracking
+        "sessions": SessionRepository(store.sessions),      # Authentication session management
+        "generation": GenerationRequestRepository(store.generation_requests),  # AI request tracking
     }
 
     # --- Service layer -------------------------------------------------- #
+    # Services contain business logic and orchestrate repository operations
+    # They receive repositories via dependency injection (DI)
+    # Benefits: Testable (can inject mocks), loosely coupled, single responsibility
     services = {
+        # AuthService: Manages user authentication and session lifecycle
         "auth": AuthService(repositories["users"], repositories["sessions"]),
+        
+        # DocumentService: Handles document creation and version management
         "documents": DocumentService(repositories["documents"], repositories["versions"]),
+        
+        # GenerationService: Orchestrates AI content generation workflow
+        # Note: Receives llm_callable for AI generation (dependency injection)
         "generation": GenerationService(repositories["generation"], llm_callable=safe_generate),
     }
 
+    # Store configuration in Flask app config
+    # Routes access these via current_app.config
     app.config["DATA_STORE"] = store
     app.config["REPOSITORIES"] = repositories
     app.config["SERVICES"] = services
 
     # --- Blueprint registration ---------------------------------------- #
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(documents_bp)
-    app.register_blueprint(generation_bp)
+    # Blueprints organize routes by feature/domain
+    # Each blueprint handles a specific area of functionality
+    app.register_blueprint(auth_bp)         # /api/auth/* - Authentication endpoints
+    app.register_blueprint(documents_bp)    # /api/documents/* - Document management
+    app.register_blueprint(generation_bp)   # /api/generation/* - AI generation
 
     @app.get("/health")
     def healthcheck():
-        """Simple status endpoint for local development."""
+        """
+        Health check endpoint for monitoring and debugging.
+        
+        Returns current status and entity counts from the data store.
+        Useful for:
+            - Verifying the server is running
+            - Checking data state during development
+            - Monitoring in production
+            
+        Returns:
+            JSON response with status and collection counts
+            
+        Example Response:
+            {
+                "status": "ok",
+                "collections": {
+                    "users": 5,
+                    "documents": 12,
+                    "versions": 28,
+                    "sessions": 3,
+                    "generation_requests": 45
+                }
+            }
+        """
         return jsonify(
             {
                 "status": "ok",
@@ -61,7 +149,21 @@ def create_app() -> Flask:
     
     @app.get("/static/<filename>")
     def serve_demo_file(filename):
-        """Serve demo document files."""
+        """
+        Serve demo document files for download.
+        
+        This endpoint serves generated document files (like sample Word/PowerPoint files)
+        from the generated_documents directory.
+        
+        Args:
+            filename: Name of the file to serve
+            
+        Returns:
+            File download response
+            
+        Note:
+            In production, consider using a CDN or cloud storage for file serving
+        """
         from flask import send_from_directory
         import os
         demo_dir = os.path.join(os.path.dirname(__file__), 'generated_documents')
@@ -70,8 +172,26 @@ def create_app() -> Flask:
     return app
 
 
+# Create the application instance
+# This app object is used by Flask development server and WSGI servers (Gunicorn, etc.)
 app = create_app()
 
 
 if __name__ == "__main__":
+    """
+    Development server entry point.
+    
+    Run this file directly for local development:
+        python backend/app.py
+        
+    The Flask development server will start on http://127.0.0.1:5000
+    
+    Features:
+        - Debug mode enabled (auto-reload on code changes)
+        - Detailed error pages
+        - Interactive debugger
+        
+    Note:
+        DO NOT use this server in production! Use Gunicorn or similar WSGI server.
+    """
     app.run(host="127.0.0.1", port=5000, debug=True)
