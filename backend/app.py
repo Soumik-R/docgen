@@ -1,26 +1,11 @@
 """
-Flask application entrypoint for the AI Document Authoring Platform.
-
-This module serves as the main entry point for the backend API server.
-It follows the Application Factory pattern, creating and configuring the Flask app.
-
-Architecture:
-    - Uses Blueprint pattern for modular route organization
-    - Implements Dependency Injection for services and repositories
-    - Maintains separation of concerns (routes -> services -> repositories -> data)
-    - Configures CORS for frontend communication
-
-Key Components:
-    - Data Store: In-memory storage (temporary, will migrate to Firestore)
-    - Repositories: Data access layer with CRUD operations
-    - Services: Business logic layer orchestrating operations
-    - Routes: HTTP endpoint handlers
+Strat
 """
 
 from __future__ import annotations
 
 from flask import Flask, jsonify
-from flask_cors import CORS
+from flask_cors import CORS 
 from dotenv import load_dotenv
 
 from repositories.store import InMemoryDataStore
@@ -35,30 +20,7 @@ from utils.llm_helper import safe_generate
 
 
 def create_app() -> Flask:
-    """
-    Instantiate and configure the Flask application using the Factory Pattern.
     
-    This function creates a new Flask application instance and configures all
-    necessary components including data store, repositories, services, and routes.
-    
-    Benefits of Factory Pattern:
-        - Enables multiple app instances (useful for testing)
-        - Centralizes configuration
-        - Makes dependency injection explicit
-        
-    Returns:
-        Flask: Configured Flask application instance
-    
-    Configuration Flow:
-        1. Load environment variables (.env file)
-        2. Create Flask app instance
-        3. Enable CORS for cross-origin requests
-        4. Initialize in-memory data store
-        5. Create repository instances (data access layer)
-        6. Create service instances (business logic layer)
-        7. Register route blueprints (HTTP handlers)
-        8. Add health check endpoint
-    """
     # Load environment variables from .env file (contains API keys, config)
     load_dotenv()
     
