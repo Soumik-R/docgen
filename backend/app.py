@@ -36,9 +36,6 @@ def create_app() -> Flask:
     # Future: Replace with Firestore collections for production
     store = InMemoryDataStore()
     
-    # Initialize repositories - each repository manages one entity type
-    # Repositories provide CRUD operations and abstract data access
-    # This pattern allows us to swap storage backends without changing business logic
     repositories = {
         "users": UserRepository(store.users),              # User account management
         "documents": DocumentRepository(store.documents),   # Document CRUD operations
@@ -48,9 +45,7 @@ def create_app() -> Flask:
     }
 
     # --- Service layer -------------------------------------------------- #
-    # Services contain business logic and orchestrate repository operations
-    # They receive repositories via dependency injection (DI)
-    # Benefits: Testable (can inject mocks), loosely coupled, single responsibility
+    #Service Layer is starting
     services = {
         # AuthService: Manages user authentication and session lifecycle
         "auth": AuthService(repositories["users"], repositories["sessions"]),
