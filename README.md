@@ -1,11 +1,5 @@
 # AI Document Authoring Platform
 
-## Demo Video
-
-[![Demo Video](https://img.youtube.com/vi/r7yLTuYm_J8/maxresdefault.jpg)](https://youtu.be/r7yLTuYm_J8?si=Q94fdXniZ34G_gFF)
-
-## Overview
-
 This repository now contains a working prototype for a full-stack AI-powered authoring workflow. The backend targets Python 3.13.4 with Flask, while the frontend relies on HTML + Tailwind (CDN) + vanilla JavaScript. Firestore will be integrated later; for now, in-memory repositories simulate persistence. Gemini remains the planned LLM provider (see `backend/utils/llm_helper.py` for integration notes).
 
 ## Repository Structure
