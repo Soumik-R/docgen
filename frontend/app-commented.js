@@ -1,37 +1,4 @@
-/**
- * AI Document Platform - Frontend Application
- * 
- * This is the main JavaScript file for the frontend single-page application.
- * It handles all client-side logic including:
- *   - User interface interactions
- *   - API communication with the Flask backend
- *   - State management
- *   - Dynamic rendering
- *   - Form handling
- * 
- * Architecture:
- *   - No frameworks used - pure vanilla JavaScript
- *   - Event-driven architecture
- *   - Centralized state management
- *   - Modular function design
- * 
- * Key Components:
- *   - State: Global object tracking all entities
- *   - API Layer: fetchJSON() for all backend communication
- *   - UI Layer: Rendering functions for dynamic HTML
- *   - Event Handlers: Form submissions, button clicks, tab switching
- */
 
-// ============================================================================
-// CONFIGURATION
-// ============================================================================
-
-/**
- * Backend API base URL
- * 
- * Points to the Flask development server running locally.
- * In production, this would be replaced with the actual API domain.
- */
 const API_BASE = "http://127.0.0.1:5000";
 
 // ============================================================================
