@@ -53,12 +53,11 @@ def create_app() -> Flask:
         # DocumentService: Handles document creation and version management
         "documents": DocumentService(repositories["documents"], repositories["versions"]),
         
-        # GenerationService: Orchestrates AI content generation workflow
         # Note: Receives llm_callable for AI generation (dependency injection)
         "generation": GenerationService(repositories["generation"], llm_callable=safe_generate),
     }
 
-    # Store configuration in Flask app config
+    # Store in Flask app config
     # Routes access these via current_app.config
     app.config["DATA_STORE"] = store
     app.config["REPOSITORIES"] = repositories
