@@ -66,7 +66,7 @@ def create_app() -> Flask:
     # --- Blueprint registration ---------------------------------------- #
     # Blueprints organize routes by feature/domain
     # Each blueprint handles a specific area of functionality
-    app.register_blueprint(auth_bp)         # /api/auth/* - Authentication endpoints
+    app.register_blueprint(auth_bp)         
     app.register_blueprint(documents_bp)    # /api/documents/* - Document management
     app.register_blueprint(generation_bp)   # /api/generation/* - AI generation
 
